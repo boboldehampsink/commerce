@@ -46,7 +46,6 @@ use craft\commerce\models\Transaction;
 use craft\commerce\Plugin;
 use craft\commerce\records\LineItem as LineItemRecord;
 use craft\commerce\records\Order as OrderRecord;
-use craft\commerce\records\OrderAdjustment as OrderAdjustmentRecord;
 use craft\commerce\records\OrderNotice as OrderNoticeRecord;
 use craft\commerce\records\Transaction as TransactionRecord;
 use craft\db\Query;
@@ -3609,11 +3608,6 @@ class Order extends Element implements HasStoreInterface
      */
     private function _saveAdjustments(): void
     {
-        /** @var null|array|OrderAdjustmentRecord[] $previousAdjustments */
-        $previousAdjustments = OrderAdjustmentRecord::find()
-            ->where(['orderId' => $this->id])
-            ->all();
-
         $newAdjustmentIds = [];
 
         foreach ($this->getAdjustments() as $adjustment) {
@@ -3621,12 +3615,6 @@ class Order extends Element implements HasStoreInterface
             Plugin::getInstance()->getOrderAdjustments()->saveOrderAdjustment($adjustment, false);
             $newAdjustmentIds[] = $adjustment->id;
             $adjustment->orderId = $this->id;
-        }
-
-        foreach ($previousAdjustments as $previousAdjustment) {
-            if (!in_array($previousAdjustment->id, $newAdjustmentIds, false)) {
-                $previousAdjustment->delete();
-            }
         }
 
         // Make sure all other adjustments have been cleaned up.
